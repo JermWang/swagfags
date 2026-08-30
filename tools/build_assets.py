@@ -1,8 +1,9 @@
 import json, os, re, random, shutil
 from PIL import Image, ImageSequence
 
-ROOT   = r"C:\Users\dejes\OneDrive\Desktop\CURSOR\WEB3\SWAGFAGS\SWAGFAG SKELLY CLUB"
-SITE   = r"C:\Users\dejes\OneDrive\Desktop\CURSOR\WEB3\SWAGFAGS\site"
+SITE   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT   = os.path.join(SITE, "SWAGFAG SKELLY CLUB")
+
 ASSETS = os.path.join(ROOT, "ASSETS")
 FRIED  = os.path.join(ROOT, "FULL COLLECTION", "deep_fried")
 

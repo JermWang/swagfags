@@ -1,7 +1,7 @@
 import json, os, collections
 
-SRC = r"C:\Users\dejes\OneDrive\Desktop\CURSOR\WEB3\SWAGFAGS\SWAGFAG SKELLY CLUB\FULL COLLECTION\deep_fried"
-OUT = r"C:\Users\dejes\OneDrive\Desktop\CURSOR\WEB3\SWAGFAGS\site\tools"
+SRC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "SWAGFAG SKELLY CLUB", "FULL COLLECTION", "deep_fried")
+OUT = os.path.dirname(os.path.abspath(__file__))
 
 ids = sorted(int(f[:-5]) for f in os.listdir(SRC) if f.endswith(".json"))
 print("json files:", len(ids))

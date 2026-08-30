@@ -6,7 +6,7 @@ Static site. No framework, no build step, no dependencies. Three source files
 ## Run it
 
 ```bash
-python -m http.server 5173 --directory site
+python -m http.server 5173 --directory .
 ```
 
 Then open <http://localhost:5173>. It must be served over HTTP — opening
@@ -15,7 +15,7 @@ registry data.
 
 ## Deploy
 
-Upload the contents of `site/` to any static host (Vercel, Netlify, Cloudflare
+Push the repo to any static host (Vercel, Netlify, Cloudflare
 Pages, GitHub Pages, S3). There is nothing to build and nothing to configure.
 Total weight is ~19 MB, almost all of it lazy-loaded gallery images.
 
@@ -52,11 +52,11 @@ python -m pip install Pillow
 Then, in order:
 
 ```bash
-python site/tools/build_index.py
+python tools/build_index.py
 ```
 
 ```bash
-python site/tools/build_assets.py
+python tools/build_assets.py
 ```
 
 Knobs at the top of `build_assets.py`:
