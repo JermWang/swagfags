@@ -1,0 +1,24 @@
+# ─── Source artwork ────────────────────────────────────────────────────────
+# The original collection is several GB (3,000 plates at ~2.4 MB each, plus a
+# 1.6 GB .avi). Far past what GitHub will take. It stays local; everything the
+# site needs is derived from it into site/assets/ and committed.
+SWAGFAG SKELLY CLUB/
+
+# ─── Generated assets the site no longer uses ──────────────────────────────
+# Square NFT plates, replaced by the cut-out members in site/assets/member/.
+# Regenerate with site/tools/build_assets.py and build_wall.py if ever needed.
+site/assets/gallery/
+site/assets/hero/
+site/assets/wall/
+
+# AI-generated trinkets, replaced by isolated collection art.
+# The slideshow gif IS still used, so it is not ignored.
+site/assets/trinkets/*.png
+
+# ─── Junk ──────────────────────────────────────────────────────────────────
+*.zip
+.DS_Store
+Thumbs.db
+desktop.ini
+__pycache__/
+*.pyc
