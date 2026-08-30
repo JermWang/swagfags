@@ -247,49 +247,103 @@ const DECALS = [
   'assets/decal/cashgrabber.webp',
 ];
 
-/* Dusk, in the collection's own colours: violet → magenta → ember → sun. */
-const SKY = [[14,2,48],[44,6,104],[112,14,152],[222,38,148],[255,116,98],[255,208,138]];
 
-/* value noise ---------------------------------------------------------- */
-const PERM = new Uint8Array(512);
-(() => {
-  const p = [];
-  for (let i = 0; i < 256; i++) p[i] = i;
-  let seed = 1337;
-  for (let i = 255; i > 0; i--) {
-    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-    const j = seed % (i + 1);
-    const tmp = p[i]; p[i] = p[j]; p[j] = tmp;
-  }
-  for (let i = 0; i < 512; i++) PERM[i] = p[i & 255];
-})();
 
-const fade = t => t * t * (3 - 2 * t);
-const hash = (a, b) => PERM[(PERM[a & 255] + (b & 255)) & 511] * 0.00392156862745098;
 
-function vnoise(x, y) {
-  const xi = Math.floor(x), yi = Math.floor(y);
-  const u = fade(x - xi), v = fade(y - yi);
-  const a = hash(xi, yi), b = hash(xi + 1, yi);
-  const c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
-  return (a + (b - a) * u) * (1 - v) + (c + (d - c) * u) * v;
-}
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
-const c8 = v => (v < 0 ? 0 : v > 255 ? 255 : v | 0);
 
 /* ── the sky ──────────────────────────────────────────────────────────
-   One procedural dusk, drawn small and resampled up smoothly: advecting
-   cloud strata, a heat shimmer that bends every row, and a downward
-   cascade in the lower half. Perfectly still on the landing screen;
-   comes apart on the way down. */
+   A real photographed dusk (CC0), distorted on the GPU.
+
+   The technique is the one remilia.net uses on its login background, read
+   off their bundle and reimplemented here rather than copied: a real sky
+   texture is cover-fitted into the viewport, then displaced by its OWN
+   luminance, so bright cloud refracts harder than dark cloud and the image
+   appears to bend through itself. On top of that a chromatic split samples
+   R and B either side of G, and the result is graded.
+
+   Everything that distorts rides scroll: dead calm at the landing screen,
+   coming apart on the way down. Pointer X widens the chromatic split, so
+   the sky reacts to the same input as the mark. */
+
+const SKY_SRC = 'assets/sky/dusk.webp';
+
+const VERT = `#version 300 es
+in vec2 p;
+void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
+
+const FRAG = `#version 300 es
+precision highp float;
+
+uniform sampler2D uTex;
+uniform vec2  uRes;
+uniform float uTime;
+uniform float uTexAspect;
+uniform float uProg;     // scroll 0..1
+uniform float uMx;       // pointer x 0..1
+out vec4 outColor;
+
+/* CSS background-size:cover, in UV space — crop the long axis, never stretch */
+vec2 coverFit(vec2 uv, float texA, float vpA){
+  vec2 r = uv;
+  if (vpA > texA) r.y = (uv.y - 0.5) * (texA / vpA) + 0.5;
+  else            r.x = (uv.x - 0.5) * (vpA / texA) + 0.5;
+  return r;
+}
+
+float luma(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / uRes;
+  uv.y = 1.0 - uv.y;
+
+  vec2 s = coverFit(uv, uTexAspect, uRes.x / uRes.y);
+
+  /* the weather keeps moving even when the page is still */
+  s.x += uTime * 0.0045;
+
+  /* ripple, gated on scroll so the landing screen is perfectly calm */
+  float w = uProg * uProg;
+  s.x += sin(s.y * 17.0 + uTime * 0.55) * 0.011 * w;
+  s.y += sin(s.x * 23.0 - uTime * 0.42) * 0.007 * w;
+
+  /* self-displacement: the sky refracts through its own brightness */
+  float g = luma(texture(uTex, s).rgb);
+  vec2 disp = vec2(g * 0.014 * (1.0 + w * 2.6));
+  vec2 du = s + disp;
+
+  /* chromatic split — widens as you scroll and as the pointer leaves centre */
+  float ch = 0.0012 + w * 0.0065 + abs(uMx - 0.5) * 0.0045;
+  vec3 col = vec3(
+    texture(uTex, du + vec2(ch, 0.0)).r,
+    texture(uTex, du).g,
+    texture(uTex, du - vec2(ch, 0.0)).b
+  );
+
+  /* grade */
+  col = mix(vec3(luma(col)), col, 1.22);   // saturation
+  col = (col - 0.5) * 1.16 + 0.5;          // contrast
+  col *= 1.03;                             // brightness
+
+  outColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+}`;
 
 const sky = {
   init() {
     this.canvas = $('#sky');
     if (!this.canvas) return;
     this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    this.img = new Image();
+    this.img.onload = () => this.start();
+    this.img.onerror = () => { this.failed = true; };
+    this.img.src = SKY_SRC;
+  },
+
+  start() {
+    if (!this.initGL()) { this.init2D(); return; }
     this.resize();
     addEventListener('resize', () => this.resize(), { passive: true });
 
@@ -297,88 +351,138 @@ const sky = {
     this.last = 0;
     const loop = now => {
       this.raf = requestAnimationFrame(loop);
-      if (now - this.last < 33) return;              // ~30fps is plenty
+      if (now - this.last < 33) return;          // ~30fps is plenty
       this.last = now;
       this.paint((now - this.t0) / 1000);
     };
     if (this.reduced) this.paint(0);
     else this.raf = requestAnimationFrame(loop);
+
+    // rAF is paused while the tab is hidden; redraw the moment it returns
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) this.paint((performance.now() - this.t0) / 1000);
+    });
+    // Paint synchronously on scroll rather than relying on the rAF loop.
+    // rAF is throttled or paused whenever the page is not being composited,
+    // and a WebGL surface with nothing redrawing it reads as black — so the
+    // scroll-driven distortion has to drive its own repaint.
+    addEventListener('scroll', () => {
+      const now = performance.now();
+      if (now - (this._lastScrollPaint || 0) < 33) return;
+      this._lastScrollPaint = now;
+      this.paint((now - this.t0) / 1000);
+    }, { passive: true });
+  },
+
+  initGL() {
+    const gl = this.canvas.getContext('webgl2', {
+      antialias: false, alpha: false, depth: false, stencil: false,
+      powerPreference: 'low-power',
+      preserveDrawingBuffer: true,   // a single draw has to survive compositing
+    });
+    if (!gl) return false;
+    this.gl = gl;
+
+    const compile = (type, src) => {
+      const sh = gl.createShader(type);
+      gl.shaderSource(sh, src);
+      gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+        console.error('sky shader:', gl.getShaderInfoLog(sh));
+        return null;
+      }
+      return sh;
+    };
+    const vs = compile(gl.VERTEX_SHADER, VERT);
+    const fs = compile(gl.FRAGMENT_SHADER, FRAG);
+    if (!vs || !fs) return false;
+
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      console.error('sky link:', gl.getProgramInfoLog(prog));
+      return false;
+    }
+    gl.useProgram(prog);
+    this.prog = prog;
+
+    // full-screen triangle pair
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER,
+      new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.img);
+    // repeat on x so the horizontal drift never runs out of texture
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    this.u = {
+      res:    gl.getUniformLocation(prog, 'uRes'),
+      time:   gl.getUniformLocation(prog, 'uTime'),
+      aspect: gl.getUniformLocation(prog, 'uTexAspect'),
+      prog:   gl.getUniformLocation(prog, 'uProg'),
+      mx:     gl.getUniformLocation(prog, 'uMx'),
+    };
+    gl.uniform1f(this.u.aspect, this.img.width / this.img.height);
+
+    this.canvas.addEventListener('webglcontextlost', e => {
+      e.preventDefault(); cancelAnimationFrame(this.raf);
+    });
+    this.canvas.addEventListener('webglcontextrestored', () => this.start());
+
+    return true;
   },
 
   resize() {
     const c = this.canvas;
-    if (!c) return;
-    c.width = innerWidth; c.height = innerHeight;
-    const S = 3;
-    this.bw = Math.max(40, Math.ceil(innerWidth / S));
-    this.bh = Math.max(40, Math.ceil(innerHeight / S));
-    this.buf = document.createElement('canvas');
-    this.buf.width = this.bw; this.buf.height = this.bh;
-    this.bctx = this.buf.getContext('2d');
-    this.img = this.bctx.createImageData(this.bw, this.bh);
-    this.ctx = c.getContext('2d');
+    const dpr = Math.min(devicePixelRatio || 1, 1.5);
+    c.width = Math.round(innerWidth * dpr);
+    c.height = Math.round(innerHeight * dpr);
+    if (this.gl) {
+      this.gl.viewport(0, 0, c.width, c.height);
+      this.gl.uniform2f(this.u.res, c.width, c.height);
+    } else if (this.ctx2d) {
+      this.draw2D();
+    }
     if (this.reduced) this.paint(0);
   },
 
   paint(t) {
-    const bw = this.bw, bh = this.bh, img = this.img;
-    if (!img) return;
-    const px = img.data;
-    /* Read the scroll from whichever element is actually the scroller —
-       depending on the host it is the window OR the body. */
+    const gl = this.gl;
+    if (!gl) return;
     const se = document.scrollingElement || document.documentElement;
-    const y0 = scrollY || se.scrollTop || document.body.scrollTop || 0;
+    const y = scrollY || se.scrollTop || document.body.scrollTop || 0;
     const maxY = Math.max(1, Math.max(se.scrollHeight, document.body.scrollHeight) - innerHeight);
 
-    const drift = y0 * 0.0012;                       // the plane keeps moving as you go down
-    const prog = clamp01(y0 / maxY);
-    const warp = prog * prog * 2.6;                  // exactly nothing at the top
+    gl.uniform1f(this.u.time, t);
+    gl.uniform1f(this.u.prog, clamp01(y / maxY));
+    gl.uniform1f(this.u.mx, view ? view.mx : 0.5);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  },
 
-    for (let y = 0; y < bh; y++) {
-      const v = y / bh;
-      const seg = Math.pow(v, 1.08) * (SKY.length - 1);   // horizon low in frame
-      const i0 = Math.min(SKY.length - 2, seg | 0);
-      const ft = seg - i0;
-      const c0 = SKY[i0], c1 = SKY[i0 + 1];
-      const br = lerp(c0[0], c1[0], ft), bg = lerp(c0[1], c1[1], ft), bb = lerp(c0[2], c1[2], ft);
-      /* shimmer: every row is displaced. Zero at the landing screen,
-         heavy by the bottom of the page. */
-      const sh = (0.021 * Math.sin(v * 19 + t * 1.15)
-                + 0.011 * Math.sin(v * 47 - t * 0.72)
-                + 0.026 * prog * Math.sin(v * 88 + t * 2.15)
-                + 0.018 * prog * Math.sin(v * 151 - t * 1.6)) * warp;
-      const cascadeMask = clamp01((v - 0.42) / 0.58) * prog;
+  /* no WebGL2: still show the real sky, just undistorted */
+  init2D() {
+    this.ctx2d = this.canvas.getContext('2d');
+    this.resize();
+    addEventListener('resize', () => this.resize(), { passive: true });
+  },
 
-      for (let x = 0; x < bw; x++) {
-        const u = x / bw + sh;
-
-        /* cloud strata, advecting sideways and thinning with altitude */
-        let cl = vnoise(u * 4.4 + t * 0.05, v * 9.0 + drift) * 0.50
-               + vnoise(u * 10.2 - t * 0.03, v * 20.5 + drift) * 0.32
-               + vnoise(u * 23.0 + t * 0.02, v * 44.0 + drift) * 0.18;
-        cl = clamp01((cl - 0.30) * 2.6) * (0.42 + v * 0.86);
-
-        /* the waterfall: noise falling straight down, forever */
-        const wv = vnoise(u * 8.4, v * 26.0 - t * 1.35);
-        const cascade = cascadeMask * clamp01((wv - 0.44) * 2.7);
-
-        let r = br + (252 - br) * cl * 0.9;
-        let g = bg + (240 - bg) * cl * 0.9;
-        let b = bb + (255 - bb) * cl * 0.9;
-        r += cascade * (168 - r) * 0.74;
-        g += cascade * (248 - g) * 0.74;
-        b += cascade * (255 - b) * 0.74;
-
-        const i = (y * bw + x) << 2;
-        px[i] = c8(r); px[i + 1] = c8(g); px[i + 2] = c8(b); px[i + 3] = 255;
-      }
-    }
-
-    this.bctx.putImageData(img, 0, 0);
-    const ctx = this.ctx;
-    ctx.imageSmoothingEnabled = true;                // soft, not blocky
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(this.buf, 0, 0, this.canvas.width, this.canvas.height);
+  draw2D() {
+    const c = this.canvas, ctx = this.ctx2d, im = this.img;
+    if (!ctx || !im.width) return;
+    const scale = Math.max(c.width / im.width, c.height / im.height);
+    const w = im.width * scale, h = im.height * scale;
+    ctx.drawImage(im, (c.width - w) / 2, (c.height - h) / 2, w, h);
   },
 };
 
