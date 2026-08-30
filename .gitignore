@@ -22,3 +22,6 @@ Thumbs.db
 desktop.ini
 __pycache__/
 *.pyc
+
+# Contact sheet of full plates — not used by the site
+art-contact-sheet.jpg
