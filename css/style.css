@@ -62,14 +62,6 @@ a:hover{ color:var(--hot); border-bottom-color:var(--hot) }
   position:relative; min-height:100svh; display:grid; place-items:center;
   overflow:hidden; padding:120px 0 90px;
 }
-.mark-vignette{
-  position:absolute; left:50%; top:50%;
-  width:min(112vw,1340px); height:min(78vh,700px);
-  transform:translate(-50%,-50%); z-index:1; pointer-events:none;
-  background:radial-gradient(ellipse 40% 34% at 50% 54%,
-    rgba(7,0,12,.86) 0%, rgba(7,0,12,.74) 32%, rgba(7,0,12,.42) 56%,
-    rgba(7,0,12,.12) 78%, rgba(7,0,12,0) 92%);
-}
 .mark-inner{ position:relative; z-index:2; width:100%; display:grid; justify-items:center }
 .mark-stack{ position:relative; width:min(47vw,780px) }
 .mark-stack img{
@@ -81,7 +73,6 @@ a:hover{ color:var(--hot); border-bottom-color:var(--hot) }
 #ghostB{ z-index:2; opacity:.6 }
 #mark{
   position:relative; z-index:3;
-  filter:drop-shadow(0 0 70px rgba(7,0,12,.95)) drop-shadow(0 14px 34px rgba(7,0,12,.75));
 }
 
 .creed{
@@ -104,9 +95,10 @@ a:hover{ color:var(--hot); border-bottom-color:var(--hot) }
 
 .s-stretch{ position:relative; overflow:hidden; padding:0 0 70px }
 .stretch-decal{
-  position:relative; z-index:3; width:min(1240px,128vw); height:auto;
-  margin:0 0 -4vw -6vw; transform:rotate(-2.4deg); pointer-events:none;
-  filter:saturate(1.45) contrast(1.06) drop-shadow(0 10px 30px rgba(0,0,0,.7));
+  position:relative; z-index:3; left:50%; width:min(1240px,128vw); height:auto;
+  margin:0 0 -4vw; transform:translateX(-50%) rotate(-2.4deg);
+  transform-origin:center; pointer-events:none;
+  filter:saturate(1.45) contrast(1.06);
 }
 .figure-row{
   position:relative; z-index:2; display:flex; align-items:flex-end;
@@ -134,7 +126,10 @@ a:hover{ color:var(--hot); border-bottom-color:var(--hot) }
   overflow:hidden; padding:0;
 }
 #stretchMark{
+  /* 172vw inside a ~100vw grid track: alignment can't centre an oversized
+     item reliably, so pin the left edge at (centre - half its width). */
   position:relative; z-index:2; width:172vw; max-width:none; height:auto;
+  margin-left:calc(50% - 86vw); margin-right:calc(50% - 86vw);
   image-rendering:pixelated; mix-blend-mode:screen;
   transform-origin:center; filter:saturate(1.5) contrast(1.06);
 }
@@ -152,7 +147,7 @@ a:hover{ color:var(--hot); border-bottom-color:var(--hot) }
 .run-r{ animation:sfRunR 44s linear infinite }
 .run-track img{
   display:block; height:clamp(84px,13vw,210px); width:auto; flex:none;
-  filter:saturate(1.5) contrast(1.05) drop-shadow(0 6px 24px rgba(7,0,12,.8));
+  filter:saturate(1.5) contrast(1.05);
 }
 
 /* ---------- V · the hole ---------- */
@@ -165,7 +160,6 @@ a:hover{ color:var(--hot); border-bottom-color:var(--hot) }
   position:relative; z-index:2; width:min(86vw,1080px); height:auto;
   transform-origin:center; image-rendering:pixelated;
   filter:saturate(1.9) contrast(1.08);
-  box-shadow:0 40px 120px -30px rgba(255,0,174,.55);
 }
 
 /* ---------- the tools, in the same language ---------- */
@@ -265,7 +259,6 @@ footer#contact{
 }
 .colophon-mark{
   width:min(70vw,600px); height:auto; transform:scaleY(1.18); transform-origin:center;
-  filter:drop-shadow(0 10px 40px rgba(7,0,12,.9));
 }
 .colophon-nav{ display:flex; flex-wrap:wrap; justify-content:center; gap:26px }
 .colophon-nav a{ font-size:9px; letter-spacing:.34em; text-transform:uppercase }
