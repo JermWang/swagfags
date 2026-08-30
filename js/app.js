@@ -1,6 +1,6 @@
 /* ===================================================================
-   SWAGFAG SKELLY CLUB — archive terminal
-   No dependencies. No build step. Just like they used to make them.
+   SWAGFAG SKELLY CLUB
+   Ported from the Claude Design artboard. No dependencies, no build step.
    =================================================================== */
 
 const $  = (s, r = document) => r.querySelector(s);
@@ -9,97 +9,6 @@ const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, 
 const pick = a => a[Math.floor(Math.random() * a.length)];
 
 const state = { traits: null, gallery: null, hero: null, filtered: [] };
-
-/* ───────────────────────── GATE ───────────────────────── */
-
-const GATE_LINES = [
-  'BOOTING ROTTEN JPEG .............. ok',
-  'MOUNTING JUNK DRAWER ............. ok',
-  'READING GUESTBOOK ................ mostly lies',
-  'LOADING GLITTER CURSOR ........... dangerous',
-  'MONETIZATION MODULE .............. not found',
-  '',
-  'This is an art site. Nothing here is an investment.',
-  'Everything may be dragged. Most things should not be trusted.',
-  '',
-  'You may enter.',
-];
-
-function runGate() {
-  const gate = $('#gate');
-  if (sessionStorage.getItem('sfsc.entered') === '1') { gate.remove(); return; }
-
-  gate.hidden = false;
-  const log = $('#gateLog');
-  const btn = $('#gateBtn');
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  let timer = null;
-
-  // The animation is flavour. It must never gate entry — the button is live
-  // from the first frame, and anything that enters also stops the typing.
-  const enter = () => {
-    clearTimeout(timer);
-    sessionStorage.setItem('sfsc.entered', '1');
-    gate.classList.add('dismissed');
-    document.removeEventListener('keydown', onKey);
-  };
-
-  const onKey = e => {
-    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enter(); }
-  };
-
-  gate.addEventListener('click', enter);
-  document.addEventListener('keydown', onKey);
-
-  const full = GATE_LINES.join('\n');
-
-  if (reduced) {
-    log.textContent = full;
-  } else {
-    // Type whole lines rather than characters — the per-character version ran
-    // over 20 seconds once timer clamping was accounted for. This lands in ~2.
-    let i = 0;
-    const tick = () => {
-      log.textContent = GATE_LINES.slice(0, ++i).join('\n') + (i < GATE_LINES.length ? '\n█' : '');
-      if (i < GATE_LINES.length) timer = setTimeout(tick, 190);
-    };
-    tick();
-  }
-
-  btn.focus();
-}
-
-/* ───────────────────────── CHROME ───────────────────────── */
-
-function ticker() {
-  if (!$('#tickerText')) return;
-  const items = [
-    'RIGHT CLICK — <b>SAVE AS</b>',
-    'COMPRESSION IS NOT DAMAGE',
-    'PNG IS A SPIRITUAL MEDIUM',
-    'NO ROADMAP — <b>NO MARKET — NO UTILITY</b>',
-    'THE FRY IS PERMANENT',
-    'DRAG THE JUNK',
-    'THE EYES GO ON LAST',
-    'BEST VIEWED AT 1024×768 OR WORSE',
-    'SIGN MY GUESTBOOK',
-    'LURK MORE',
-  ];
-  const run = items.join(' ♦ ') + ' ♦ ';
-  $('#tickerText').innerHTML = run + run;   // doubled so the -50% loop is seamless
-}
-
-function hitCounter() {
-  const el = $('#hitCounter');
-  if (!el) return;
-  const KEY = 'sfsc.hits';
-  let n = parseInt(localStorage.getItem(KEY) || '0', 10);
-  if (!n) n = 141000 + Math.floor(Math.random() * 900);
-  n += 1;
-  localStorage.setItem(KEY, String(n));
-  el.textContent = String(n).padStart(7, '0');
-}
 
 /* ───────────────────────── REGISTRY ───────────────────────── */
 
@@ -317,227 +226,279 @@ function buildForge() {
   forge.roll();
 }
 
-/* ───────────────────────── THE RANK ─────────────────────────
-   Cut-out members standing on the page's own ground. No square plates,
-   no frames — just the characters. */
+/* ═════════════════════════ THE DESIGN ═════════════════════════
+   Ported from the Claude Design artboard. Constants, easing and
+   magic numbers are kept exactly as authored there. */
 
-function buildRank() {
-  const host = $('#rankRow');
-  if (!host || !state.member) return;
-  const chosen = [...state.member].sort(() => Math.random() - 0.5).slice(0, 7);
-  chosen.forEach((id, i) => {
-    const fig = document.createElement('figure');
-    fig.className = 'unit';
-    fig.style.setProperty('--i', i);
-    fig.innerHTML = `<img loading="lazy" decoding="async" src="${cutout(id)}" alt="">` +
-                    `<figcaption>№ ${id}</figcaption>`;
-    host.appendChild(fig);
-  });
+const FIGURES = [1795, 1862, 1370, 2193, 1874, 1056, 2266, 1826];
+
+/* Base distortion per figure — nobody is at true proportion until you reach them. */
+const WARP = [
+  [0.46, 1.78], [1.55, 0.78], [0.34, 1.86], [1.22, 0.90],
+  [0.58, 1.52], [1.90, 0.66], [0.40, 1.70], [1.38, 0.82],
+];
+
+const DECALS = [
+  'assets/decal/bando-world-order.webp',
+  'assets/decal/grifter.webp',
+  'assets/decal/cokefiend.webp',
+  'assets/mark/wordmark.webp',
+  'assets/decal/ak47.webp',
+  'assets/decal/cashgrabber.webp',
+];
+
+/* Dusk, in the collection's own colours: violet → magenta → ember → sun. */
+const SKY = [[14,2,48],[44,6,104],[112,14,152],[222,38,148],[255,116,98],[255,208,138]];
+
+/* value noise ---------------------------------------------------------- */
+const PERM = new Uint8Array(512);
+(() => {
+  const p = [];
+  for (let i = 0; i < 256; i++) p[i] = i;
+  let seed = 1337;
+  for (let i = 255; i > 0; i--) {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const j = seed % (i + 1);
+    const tmp = p[i]; p[i] = p[j]; p[j] = tmp;
+  }
+  for (let i = 0; i < 512; i++) PERM[i] = p[i & 255];
+})();
+
+const fade = t => t * t * (3 - 2 * t);
+const hash = (a, b) => PERM[(PERM[a & 255] + (b & 255)) & 511] * 0.00392156862745098;
+
+function vnoise(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y);
+  const u = fade(x - xi), v = fade(y - yi);
+  const a = hash(xi, yi), b = hash(xi + 1, yi);
+  const c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+  return (a + (b - a) * u) * (1 - v) + (c + (d - c) * u) * v;
 }
 
-/* ───────────────────────── ORNAMENTS ───────────────────────── */
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
+const c8 = v => (v < 0 ? 0 : v > 255 ? 255 : v | 0);
 
-/* Hold to look. Release and the seal closes again. */
-function holdToLook(el) {
-  const open  = () => el.classList.add('open');
-  const close = () => el.classList.remove('open');
-  el.addEventListener('pointerdown', open);
-  el.addEventListener('pointerup', close);
-  el.addEventListener('pointerleave', close);
-  el.addEventListener('pointercancel', close);
-  // keyboard equivalent, so this isn't pointer-only
-  el.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
-  });
-  el.addEventListener('keyup', close);
-  el.addEventListener('blur', close);
-}
+/* ── the sky ──────────────────────────────────────────────────────────
+   One procedural dusk, drawn small and resampled up smoothly: advecting
+   cloud strata, a heat shimmer that bends every row, and a downward
+   cascade in the lower half. Perfectly still on the landing screen;
+   comes apart on the way down. */
 
-function ornaments() {
-  const img = $('#heroImg');
-  if (!img || !state.member) return;
-  const id = pick(state.member);
-  img.src = cutout(id);
-  const cap = $('#heroCap');
-  if (cap) cap.textContent = `№ ${id}`;
-}
+const sky = {
+  init() {
+    this.canvas = $('#sky');
+    if (!this.canvas) return;
+    this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.resize();
+    addEventListener('resize', () => this.resize(), { passive: true });
 
-/* ───────────────────────── INTERNET RELIQUARY ───────────────────────── */
-
-function initReliquary() {
-  const shell = $('#reliquary');
-  const field = $('#relicField');
-  if (!shell || !field) return;
-
-  const relics = $$('.relic', field);
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
-  let z = 6;
-  let drag = null;
-  let trailAt = 0;
-  let popupReturn = null;
-
-  const move = (el, x, y) => {
-    const maxX = Math.max(0, field.clientWidth - el.offsetWidth);
-    const maxY = Math.max(0, field.clientHeight - el.offsetHeight);
-    const nextX = clamp(x, 0, maxX);
-    const nextY = clamp(y, 0, maxY);
-    el.style.left = nextX + 'px';
-    el.style.top = nextY + 'px';
-    el.dataset.x = String(nextX);
-    el.dataset.y = String(nextY);
-  };
-
-  const raise = el => {
-    z += 1;
-    el.style.zIndex = String(z);
-  };
-
-  const placeHome = () => {
-    relics.forEach(el => {
-      const x = (Number(el.dataset.homeX) / 100) * Math.max(0, field.clientWidth - el.offsetWidth);
-      const y = (Number(el.dataset.homeY) / 100) * Math.max(0, field.clientHeight - el.offsetHeight);
-      el.style.setProperty('--rz', (Number(el.dataset.r) || 0) + 'deg');
-      el.style.setProperty('--rx', '0deg');
-      el.style.setProperty('--ry', '0deg');
-      el.style.setProperty('--scale', '1');
-      move(el, x, y);
-    });
-  };
-
-  relics.forEach(el => {
-    el.addEventListener('pointerdown', e => {
-      if (e.button !== 0) return;
-      const rect = field.getBoundingClientRect();
-      const x = Number(el.dataset.x) || 0;
-      const y = Number(el.dataset.y) || 0;
-      drag = { el, dx: e.clientX - rect.left - x, dy: e.clientY - rect.top - y };
-      raise(el);
-      el.classList.add('is-dragging');
-      el.setPointerCapture(e.pointerId);
-      e.preventDefault();
-    });
-
-    el.addEventListener('pointermove', e => {
-      if (drag && drag.el === el) {
-        const rect = field.getBoundingClientRect();
-        move(el, e.clientX - rect.left - drag.dx, e.clientY - rect.top - drag.dy);
-        return;
-      }
-      if (reduced || e.pointerType === 'touch') return;
-      const rect = el.getBoundingClientRect();
-      const px = clamp((e.clientX - rect.left) / rect.width, 0, 1);
-      const py = clamp((e.clientY - rect.top) / rect.height, 0, 1);
-      el.style.setProperty('--ry', ((px - .5) * 15).toFixed(2) + 'deg');
-      el.style.setProperty('--rx', ((.5 - py) * 12).toFixed(2) + 'deg');
-    });
-
-    const drop = e => {
-      if (!drag || drag.el !== el) return;
-      el.classList.remove('is-dragging');
-      el.style.setProperty('--rx', '0deg');
-      el.style.setProperty('--ry', '0deg');
-      drag = null;
-      if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    this.t0 = performance.now();
+    this.last = 0;
+    const loop = now => {
+      this.raf = requestAnimationFrame(loop);
+      if (now - this.last < 33) return;              // ~30fps is plenty
+      this.last = now;
+      this.paint((now - this.t0) / 1000);
     };
-    el.addEventListener('pointerup', drop);
-    el.addEventListener('pointercancel', drop);
-    el.addEventListener('pointerleave', () => {
-      if (drag) return;
-      el.style.setProperty('--rx', '0deg');
-      el.style.setProperty('--ry', '0deg');
-    });
+    if (this.reduced) this.paint(0);
+    else this.raf = requestAnimationFrame(loop);
+  },
 
-    el.addEventListener('focus', () => raise(el));
-    el.addEventListener('keydown', e => {
-      const amount = e.shiftKey ? 20 : 6;
-      const x = Number(el.dataset.x) || 0;
-      const y = Number(el.dataset.y) || 0;
-      const delta = {
-        ArrowLeft: [-amount, 0], ArrowRight: [amount, 0],
-        ArrowUp: [0, -amount], ArrowDown: [0, amount],
-      }[e.key];
-      if (!delta) return;
-      e.preventDefault();
-      move(el, x + delta[0], y + delta[1]);
-    });
+  resize() {
+    const c = this.canvas;
+    if (!c) return;
+    c.width = innerWidth; c.height = innerHeight;
+    const S = 3;
+    this.bw = Math.max(40, Math.ceil(innerWidth / S));
+    this.bh = Math.max(40, Math.ceil(innerHeight / S));
+    this.buf = document.createElement('canvas');
+    this.buf.width = this.bw; this.buf.height = this.bh;
+    this.bctx = this.buf.getContext('2d');
+    this.img = this.bctx.createImageData(this.bw, this.bh);
+    this.ctx = c.getContext('2d');
+    if (this.reduced) this.paint(0);
+  },
+
+  paint(t) {
+    const bw = this.bw, bh = this.bh, img = this.img;
+    if (!img) return;
+    const px = img.data;
+    /* Read the scroll from whichever element is actually the scroller —
+       depending on the host it is the window OR the body. */
+    const se = document.scrollingElement || document.documentElement;
+    const y0 = scrollY || se.scrollTop || document.body.scrollTop || 0;
+    const maxY = Math.max(1, Math.max(se.scrollHeight, document.body.scrollHeight) - innerHeight);
+
+    const drift = y0 * 0.0012;                       // the plane keeps moving as you go down
+    const prog = clamp01(y0 / maxY);
+    const warp = prog * prog * 2.6;                  // exactly nothing at the top
+
+    for (let y = 0; y < bh; y++) {
+      const v = y / bh;
+      const seg = Math.pow(v, 1.08) * (SKY.length - 1);   // horizon low in frame
+      const i0 = Math.min(SKY.length - 2, seg | 0);
+      const ft = seg - i0;
+      const c0 = SKY[i0], c1 = SKY[i0 + 1];
+      const br = lerp(c0[0], c1[0], ft), bg = lerp(c0[1], c1[1], ft), bb = lerp(c0[2], c1[2], ft);
+      /* shimmer: every row is displaced. Zero at the landing screen,
+         heavy by the bottom of the page. */
+      const sh = (0.021 * Math.sin(v * 19 + t * 1.15)
+                + 0.011 * Math.sin(v * 47 - t * 0.72)
+                + 0.026 * prog * Math.sin(v * 88 + t * 2.15)
+                + 0.018 * prog * Math.sin(v * 151 - t * 1.6)) * warp;
+      const cascadeMask = clamp01((v - 0.42) / 0.58) * prog;
+
+      for (let x = 0; x < bw; x++) {
+        const u = x / bw + sh;
+
+        /* cloud strata, advecting sideways and thinning with altitude */
+        let cl = vnoise(u * 4.4 + t * 0.05, v * 9.0 + drift) * 0.50
+               + vnoise(u * 10.2 - t * 0.03, v * 20.5 + drift) * 0.32
+               + vnoise(u * 23.0 + t * 0.02, v * 44.0 + drift) * 0.18;
+        cl = clamp01((cl - 0.30) * 2.6) * (0.42 + v * 0.86);
+
+        /* the waterfall: noise falling straight down, forever */
+        const wv = vnoise(u * 8.4, v * 26.0 - t * 1.35);
+        const cascade = cascadeMask * clamp01((wv - 0.44) * 2.7);
+
+        let r = br + (252 - br) * cl * 0.9;
+        let g = bg + (240 - bg) * cl * 0.9;
+        let b = bb + (255 - bb) * cl * 0.9;
+        r += cascade * (168 - r) * 0.74;
+        g += cascade * (248 - g) * 0.74;
+        b += cascade * (255 - b) * 0.74;
+
+        const i = (y * bw + x) << 2;
+        px[i] = c8(r); px[i + 1] = c8(g); px[i + 2] = c8(b); px[i + 3] = 255;
+      }
+    }
+
+    this.bctx.putImageData(img, 0, 0);
+    const ctx = this.ctx;
+    ctx.imageSmoothingEnabled = true;                // soft, not blocky
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(this.buf, 0, 0, this.canvas.width, this.canvas.height);
+  },
+};
+
+/* ── the reactive layer ──────────────────────────────────────────────
+   Pointer X drives the chromatic split on the mark and the knockout;
+   pointer X over the row un-warps whichever figure you reach. */
+
+const view = { mx: 0.5, rowX: null, scroll: 0 };
+let viewRaf = null;
+
+function paintView() {
+  viewRaf = null;
+  const { mx, rowX, scroll } = view;
+  const k = (mx - 0.5) * 2;
+  const sy = 1.34 + Math.abs(k) * 0.34;
+  const skew = -k * 5.2;
+
+  const mark = $('#mark'), gA = $('#ghostA'), gB = $('#ghostB');
+  if (mark) mark.style.transform = 'scaleY(' + sy.toFixed(3) + ') skewX(' + skew.toFixed(2) + 'deg)';
+  if (gA) {
+    gA.style.filter = 'hue-rotate(' + ((150 + k * 40) | 0) + 'deg) saturate(3.4)';
+    gA.style.transform = 'translate(' + (-11 - k * 9).toFixed(1) + 'px,' + (7 + k * 3).toFixed(1) + 'px) '
+      + 'scaleY(' + (sy * 1.045).toFixed(3) + ') skewX(' + (skew * 1.5).toFixed(2) + 'deg)';
+  }
+  if (gB) {
+    gB.style.filter = 'hue-rotate(' + ((300 - k * 50) | 0) + 'deg) saturate(3.4)';
+    gB.style.transform = 'translate(' + (12 - k * 9).toFixed(1) + 'px,' + (-6 + k * 3).toFixed(1) + 'px) '
+      + 'scaleY(' + (sy * 0.965).toFixed(3) + ') skewX(' + (skew * 0.5).toFixed(2) + 'deg)';
+  }
+
+  /* the mark stretched until the letterforms stop being type and become
+     architecture — cropped hard by the viewport on both sides */
+  const sm = $('#stretchMark');
+  if (sm) sm.style.transform =
+    'scaleY(' + (3.1 + Math.abs(k) * 0.5).toFixed(2) + ') skewX(' + (skew * 0.35).toFixed(2) + 'deg)';
+
+  const hole = $('#hole');
+  if (hole) hole.style.transform = 'scaleY(' + (0.72 + Math.abs(k) * 0.26).toFixed(3) + ')';
+
+  $$('#figureRow img').forEach((img, i) => {
+    const centre = (i + 0.5) / FIGURES.length;
+    const t = rowX === null
+      ? 0.06 + 0.06 * Math.sin(scroll / 190 + i)
+      : clamp01(1 - Math.abs(rowX - centre) * 4.2);
+    const w = WARP[i] || [1, 1];
+    const fx = lerp(w[0], 1, t), fy = lerp(w[1], 1, t);
+    img.style.transform = 'scale(' + fx.toFixed(3) + ',' + fy.toFixed(3) + ')';
+    img.style.filter = 'saturate(' + (1.25 + t * 0.75).toFixed(2) + ') '
+      + 'contrast(' + (1.04 + t * 0.14).toFixed(2) + ') '
+      + 'drop-shadow(0 ' + ((10 + t * 22) | 0) + 'px ' + ((20 + t * 26) | 0) + 'px rgba(7,0,12,.72))';
   });
-
-  $('#relicWorse').addEventListener('click', () => {
-    shell.classList.add('is-worse');
-    relics.forEach(el => {
-      const x = Math.random() * Math.max(0, field.clientWidth - el.offsetWidth);
-      const y = Math.random() * Math.max(0, field.clientHeight - el.offsetHeight);
-      move(el, x, y);
-      el.style.setProperty('--rz', (Math.random() * 26 - 13).toFixed(1) + 'deg');
-      el.style.setProperty('--scale', (.88 + Math.random() * .25).toFixed(2));
-      raise(el);
-    });
-  });
-
-  $('#relicReset').addEventListener('click', () => {
-    shell.classList.remove('is-worse');
-    placeHome();
-  });
-
-  const popup = $('#badPopup');
-  const closePopup = () => {
-    popup.hidden = true;
-    if (popupReturn) popupReturn.focus();
-  };
-  $('#guestbookButton').addEventListener('click', e => {
-    popupReturn = e.currentTarget;
-    popup.hidden = false;
-    $('#badPopupOkay').focus();
-  });
-  $('#badPopupClose').addEventListener('click', closePopup);
-  $('#badPopupOkay').addEventListener('click', closePopup);
-  popup.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
-
-  field.addEventListener('pointermove', e => {
-    if (reduced || e.pointerType !== 'mouse' || performance.now() - trailAt < 72) return;
-    trailAt = performance.now();
-    const rect = field.getBoundingClientRect();
-    const crumb = document.createElement('span');
-    crumb.className = 'cursor-crumb';
-    crumb.textContent = pick(['✦', '+', '☠', '♡', '※']);
-    crumb.style.left = (e.clientX - rect.left) + 'px';
-    crumb.style.top = (e.clientY - rect.top) + 'px';
-    field.appendChild(crumb);
-    crumb.addEventListener('animationend', () => crumb.remove(), { once: true });
-  });
-
-  requestAnimationFrame(placeHome);
-  window.addEventListener('load', placeHome, { once: true });
 }
+
+const queueView = () => { if (!viewRaf) viewRaf = requestAnimationFrame(paintView); };
+
+function buildDesign() {
+  const row = $('#figureRow');
+  if (row) {
+    FIGURES.forEach(id => {
+      const cell = document.createElement('div');
+      const img = document.createElement('img');
+      img.src = cutout(id); img.alt = ''; img.loading = 'lazy';
+      cell.appendChild(img);
+      row.appendChild(cell);
+    });
+    row.addEventListener('pointermove', e => {
+      const r = row.getBoundingClientRect();
+      view.rowX = clamp01((e.clientX - r.left) / r.width);
+      queueView();
+    });
+    row.addEventListener('pointerleave', () => { view.rowX = null; queueView(); });
+  }
+
+  const runA = DECALS.concat(DECALS);
+  const runB = DECALS.slice().reverse().concat(DECALS.slice().reverse());
+  [['#runA', runA], ['#runB', runB]].forEach(pair => {
+    const host = $(pair[0]);
+    if (!host) return;
+    pair[1].forEach(src => {
+      const img = document.createElement('img');
+      img.src = src; img.alt = ''; img.loading = 'lazy';
+      host.appendChild(img);
+    });
+  });
+
+  addEventListener('pointermove', e => {
+    view.mx = clamp01(e.clientX / (innerWidth || 1));
+    queueView();
+  }, { passive: true });
+
+  addEventListener('scroll', () => {
+    const se = document.scrollingElement || document.documentElement;
+    view.scroll = scrollY || se.scrollTop || document.body.scrollTop || 0;
+    queueView();
+  }, { passive: true });
+
+  paintView();
+}
+
 /* ───────────────────────── BOOT ───────────────────────── */
 
 async function boot() {
-  runGate();
-  ticker();
-  hitCounter();
-  initReliquary();
+  sky.init();
+  buildDesign();
 
-  const [traits, gallery, member, parts] = await Promise.all([
+  const results = await Promise.all([
     fetch('data/traits.json').then(r => r.json()),
     fetch('data/gallery.json').then(r => r.json()),
-    fetch('data/member.json').then(r => r.json()).catch(() => []),
-    fetch('data/parts.json').then(r => r.json()).catch(() => ({})),
   ]);
-  Object.assign(state, { traits, gallery, member, parts });
+  Object.assign(state, { traits: results[0], gallery: results[1] });
 
   buildFilters();
   divine();
   shutVault();
   buildLedger();
-  buildRank();
   buildForge();
-  ornaments();
 }
 
 boot().catch(err => {
   console.error(err);
-  const hint = document.querySelector('#vaultHint');
-  if (hint) hint.textContent =
-    'The archive is unreachable. This page must be served over HTTP, not opened as a file://.';
+  const hint = $('#vaultHint');
+  if (hint) hint.textContent = 'archive unreachable — must be served over http';
 });

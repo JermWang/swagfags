@@ -4,183 +4,125 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SWAGFAG SKELLY CLUB</title>
-<meta name="description" content="A haunted internet art junk drawer: low-poly bone, deep-fried pixels, and draggable relics.">
+<meta name="description" content="SWAGFAG SKELLY CLUB">
 <link rel="icon" href="assets/ui/skelly.webp">
-<link rel="stylesheet" href="css/style.css?v=001440">
+<link rel="stylesheet" href="css/style.css?v=20260830a">
 </head>
 <body>
 
-<!-- ═══════════════ GATE ═══════════════ -->
-<div id="gate" hidden>
-  <div class="crt">
-    <div class="seal"><img src="assets/mark/wordmark.webp" alt="Swagfag Skelly Club"></div>
-    <div class="sub">Est. MMXXIV</div>
-    <pre id="gateLog"></pre>
-    <button id="gateBtn">Enter</button><span class="hint">or click anywhere</span>
-  </div>
+<!-- the procedural dusk: fixed behind everything -->
+<div class="sky-wrap" aria-hidden="true">
+  <canvas id="sky"></canvas>
+  <div class="sky-vignette"></div>
 </div>
 
-<div id="ticker" aria-hidden="true"><span id="tickerText"></span></div>
+<div class="page">
 
-<!-- ═══════════════ MASTHEAD ═══════════════ -->
-<header id="masthead">
-  <div class="corner l caps">Est.<br>MMXXIV</div>
-  <div class="corner r caps">Members<br>only</div>
-  <h1 class="wordmark"><img src="assets/mark/wordmark.webp" alt="Swagfag Skelly Club"></h1>
-</header>
+  <nav id="topnav">
+    <a href="#world">world</a>
+    <a href="#wardrobe">wardrobe</a>
+    <a href="#contact">contact</a>
+  </nav>
 
-<!-- ═══════════════ THE RANK ═══════════════ -->
-<section id="hero">
-  <figure class="lead">
-    <img id="heroImg" alt="">
-    <figcaption id="heroCap"></figcaption>
-  </figure>
-  <div class="rank-row" id="rankRow"></div>
-</section>
-
-<div class="band"><img src="assets/decal/cashgrabber.webp" alt="" loading="lazy"></div>
-<!-- ═══════════════ INTERNET RELIQUARY ═══════════════ -->
-<section id="reliquary" aria-labelledby="reliquaryTitle">
-  <div class="relic-intro">
-    <p class="caps relic-kicker" id="reliquaryTitle">~/public_html/junk_drawer/</p>
-    <p class="caps relic-sub">last updated 09/02/24</p>
-  </div>
-
-  <div class="sticker-strip" aria-hidden="true">
-    <img src="assets/parts/strip/skelly.webp" alt="" loading="lazy">
-    <img src="assets/parts/strip/moon.webp" alt="" loading="lazy">
-    <img src="assets/parts/strip/alpaca.webp" alt="" loading="lazy">
-    <img src="assets/parts/strip/pills.webp" alt="" loading="lazy">
-    <img src="assets/parts/strip/shrek.webp" alt="" loading="lazy">
-    <img src="assets/parts/strip/gold-grillz.webp" alt="" loading="lazy">
-  </div>
-
-  <div class="relic-desktop" id="relicDesktop">
-    <div class="desktop-bar">
-      <span><i></i><i></i><i></i> swagfag_trinkets.exe</span>
-      <div class="desktop-actions">
-        <button id="relicWorse" type="button">MAKE IT WORSE</button>
-        <button id="relicReset" type="button">put it back</button>
+  <!-- ═══════════ I · THE MARK ═══════════ -->
+  <section class="s-mark">
+    <div class="mark-vignette" aria-hidden="true"></div>
+    <div class="mark-inner">
+      <div class="mark-stack">
+        <img id="ghostA" aria-hidden="true" src="assets/mark/wordmark.webp" alt="">
+        <img id="ghostB" aria-hidden="true" src="assets/mark/wordmark.webp" alt="">
+        <img id="mark" src="assets/mark/wordmark.webp" alt="Swagfag Skelly Club">
+      </div>
+      <p class="creed">Swag is a spiritual condition</p>
+      <div class="members-only">
+        <i></i><span>members only</span>
       </div>
     </div>
+  </section>
 
-    <p class="drag-note" id="dragNote">drag &middot; arrow keys</p>
+  <!-- ═══════════ II · THE STRETCH ═══════════ -->
+  <section id="world" class="s-stretch">
+    <img class="stretch-decal" aria-hidden="true" src="assets/decal/cashgrabber.webp" alt="">
+    <div class="figure-row" id="figureRow"></div>
+    <p class="row-note">Touch it to see it straight</p>
+  </section>
 
-    <div class="relic-field" id="relicField" aria-describedby="dragNote">
-      <article class="relic relic-crt" tabindex="0" data-home-x="3" data-home-y="5" data-r="-5"
-               aria-label="Cursed CRT shrine. Draggable trinket.">
-        <div class="relic-title"><span>bonecam_666.png</span><b>&times;</b></div>
-        <div class="relic-body"><img src="assets/parts/head/tribal-gold.webp" alt="A gold tribal skull, isolated"></div>
-      </article>
+  <!-- ═══════════ III · KNOCKOUT ═══════════ -->
+  <section id="wardrobe" class="s-knockout">
+    <img id="stretchMark" aria-hidden="true" src="assets/mark/wordmark.webp" alt="">
+  </section>
 
-      <article class="relic relic-phone" tabindex="0" data-home-x="62" data-home-y="4" data-r="5"
-               aria-label="Angel flip phone. Draggable trinket.">
-        <div class="relic-title"><span>CALLING_FROM_HEAVEN.png</span><b>&times;</b></div>
-        <div class="relic-body"><img src="assets/parts/br-sticker/pikachu-deagle.webp" alt="A sticker from the collection"></div>
-      </article>
+  <!-- ═══════════ IV · THE RUN ═══════════ -->
+  <section class="s-run">
+    <div class="run-lane"><div class="run-track run-l" id="runA"></div></div>
+    <div class="run-lane run-lane-2"><div class="run-track run-r" id="runB"></div></div>
+  </section>
 
-      <article class="relic relic-cd" tabindex="0" data-home-x="35" data-home-y="35" data-r="-2"
-               aria-label="Cursor CD halo. Draggable trinket.">
-        <div class="relic-title"><span>DO_NOT_BURN.iso</span><b>&times;</b></div>
-        <div class="relic-body"><img src="assets/parts/eyes/flame.webp" alt="Flame eyes, isolated"></div>
-      </article>
+  <!-- ═══════════ V · THE HOLE ═══════════ -->
+  <section class="s-hole">
+    <img id="hole" src="assets/trinkets/forbidden-slideshow.gif"
+         alt="Animated collage of Skelly Club artwork">
+  </section>
 
-      <article class="relic relic-lamp" tabindex="0" data-home-x="5" data-home-y="52" data-r="3"
-               aria-label="Skeleton specimen lamp. Draggable trinket.">
-        <div class="relic-title"><span>night_light_final2.png</span><b>&times;</b></div>
-        <div class="relic-body"><img loading="lazy" src="assets/parts/legs/rainbow-boots.webp" alt="Rainbow boots, isolated"></div>
-      </article>
-
-      <article class="relic relic-gif" tabindex="0" data-home-x="66" data-home-y="52" data-r="-4"
-               aria-label="Animated artwork transmission. Draggable window.">
-        <div class="relic-title"><span>forbidden_slideshow.gif</span><b>&times;</b></div>
-        <div class="relic-body"><img loading="lazy" src="assets/trinkets/forbidden-slideshow.gif" alt="Rapid animated collage of original Skelly Club artwork"></div>
-        <div class="gif-status"><span class="blink-dot"></span> 1 visitor online</div>
-      </article>
-
-      <aside class="guestbook" id="guestbook">
-        <div class="guestbook-title">&starf; SIGN MY GUESTBOOK &starf;</div>
-        <p><b>xX_b0n3luvr_Xx:</b> cool site!! how did u do the skulls</p>
-        <p><b>anonymous:</b> ur banner is broken on my computer</p>
-        <button id="guestbookButton" type="button">sign</button>
-      </aside>
-
-      <div class="construction" aria-hidden="true">
-        <span>UNDER</span><img src="assets/ui/skelly.webp" alt=""><span>CONSTRUCTION</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="bad-popup" id="badPopup" hidden role="dialog" aria-modal="true" aria-labelledby="badPopupTitle">
-  <div class="bad-popup-bar"><span id="badPopupTitle">guestbook.cgi says:</span><button id="badPopupClose" type="button" aria-label="Close">&times;</button></div>
-  <div class="bad-popup-body">
-    <img src="assets/ui/skelly.webp" alt="">
-    <p><b>Error 500</b><br>guestbook.cgi could not write to /var/www/guestbook.dat</p>
-    <button id="badPopupOkay" type="button">OK</button>
-  </div>
-</div>
-
-<div class="band"><img src="assets/decal/bando-world-order.webp" alt="" loading="lazy"></div>
-
-<!-- ═══════════════ THE VAULT ═══════════════ -->
-<section id="registry">
-  <div class="vault-wrap win">
-    <div class="win-bar"><span><i></i><i></i><i></i> the_vault.exe</span></div>
+  <!-- ═══════════ THE VAULT ═══════════ -->
+  <section id="registry" class="s-tool">
+    <p class="tool-label">the vault</p>
     <div class="filters">
-      <input id="fId" type="search" inputmode="numeric" placeholder="source plate · 0–2999" size="16">
-      <button id="fSummon" type="button" class="chunky hot" >Bring up</button>
+      <input id="fId" type="search" inputmode="numeric" placeholder="name one · 0–2999" size="16">
+      <button id="fSummon" type="button">bring up</button>
       <select id="fCat"><option value="">wearing…</option></select>
       <select id="fVal"><option value="">—</option></select>
-      <button id="fRandom" type="button" class="chunky" >Draw blind</button>
+      <button id="fRandom" type="button">draw blind</button>
     </div>
-
     <div id="vault">
       <figure class="cutout-frame">
-        <div id="veil" class="cutout-stage">
-          <img id="vaultImg" alt="">
-        </div>
-        <figcaption><span id="vaultCap">closed</span></figcaption>
+        <div id="veil" class="cutout-stage"><img id="vaultImg" alt=""></div>
+        <figcaption id="vaultCap">closed</figcaption>
       </figure>
       <div class="vault-side">
         <table class="traits" id="vaultTraits"></table>
-        <p class="caps vault-hint" id="vaultHint">name a source plate, or draw blind</p>
+        <p class="vault-hint" id="vaultHint">name one, or draw blind</p>
       </div>
     </div>
-
     <details class="ledger-wrap">
-      <summary class="caps">source index</summary>
+      <summary>ledger</summary>
       <div id="ledger" class="ledger"></div>
     </details>
-  </div>
-</section>
+  </section>
 
-<div class="band"><img src="assets/decal/grifter.webp" alt="" loading="lazy"></div>
-
-<!-- ═══════════════ THE FORGE ═══════════════ -->
-<section id="forge">
-  <div class="win">
-    <div class="win-bar"><span><i></i><i></i><i></i> bone_forge.exe</span></div>
+  <!-- ═══════════ THE FORGE ═══════════ -->
+  <section id="forge" class="s-tool">
+    <p class="tool-label">the bone forge</p>
     <div class="forge-wrap">
-    <canvas id="forgeCanvas" width="540" height="540"
-            aria-label="The skeleton you are assembling"></canvas>
-    <div>
-      <div class="forge-ctl" id="forgeCtl"></div>
-      <div class="forge-btns">
-        <button id="fgRandom" type="button" class="chunky hot" >Roll bones</button>
-        <button id="fgSave" type="button" class="chunky" >Download</button>
+      <canvas id="forgeCanvas" width="540" height="540"
+              aria-label="The skeleton you are assembling"></canvas>
+      <div>
+        <div class="forge-ctl" id="forgeCtl"></div>
+        <div class="forge-btns">
+          <button id="fgRandom" type="button">roll bones</button>
+          <button id="fgSave" type="button">download</button>
+        </div>
+        <p class="forge-note" id="forgeScore">not in the ledger</p>
       </div>
-      <p class="caps forge-note" id="forgeScore">not in the ledger</p>
     </div>
+  </section>
+
+  <!-- ═══════════ VI · COLOPHON ═══════════ -->
+  <footer id="contact">
+    <img class="colophon-mark" src="assets/mark/wordmark.webp" alt="Swagfag Skelly Club">
+    <div class="colophon-nav">
+      <a href="#world">world</a>
+      <a href="#wardrobe">wardrobe</a>
+      <a href="#contact">contact</a>
     </div>
-  </div>
-</section>
+    <div class="colophon-meta">
+      <span>members only</span>
+      <span>Est. MMXXIV</span>
+    </div>
+  </footer>
 
-<footer>
-  <div class="seal"><img src="assets/mark/wordmark.webp" alt="Swagfag Skelly Club"></div>
-  <div class="counter" id="hitCounter">0000000</div>
-</footer>
+</div>
 
-<script src="js/app.js?v=001440" type="module"></script>
+<script src="js/app.js?v=20260830a" type="module"></script>
 </body>
 </html>

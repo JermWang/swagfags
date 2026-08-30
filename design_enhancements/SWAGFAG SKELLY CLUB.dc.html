@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="description" content="SWAGFAG SKELLY CLUB">
+<style>
+  html{background:#07000c}
+  body{margin:0;background:#07000c;overflow-x:hidden}
+  a{color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.35)}
+  a:hover{color:#ff00ae;border-bottom-color:#ff00ae}
+  ::selection{background:#ff00ae;color:#fff}
+  @keyframes sfRunL{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+  @keyframes sfRunR{from{transform:translate3d(-50%,0,0)}to{transform:translate3d(0,0,0)}}
+  @keyframes sfPulse{0%,100%{opacity:1}50%{opacity:.2}}
+</style>
+</helmet>
+
+<div aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100svh;z-index:0;pointer-events:none;overflow:hidden">
+  <canvas ref="{{ skyCanvas }}" style="display:block;width:100%;height:100%"></canvas>
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 82% 68% at 50% 38%,rgba(7,0,12,0) 0%,rgba(7,0,12,.26) 60%,rgba(7,0,12,.7) 100%)"></div>
+</div>
+
+<div style="position:relative;z-index:2;color:#fff;font-family:Verdana,Geneva,Tahoma,sans-serif;-webkit-font-smoothing:antialiased">
+
+  <nav style="position:fixed;top:0;right:0;z-index:80;display:flex;gap:20px;padding:20px 26px;mix-blend-mode:difference">
+    <a href="#world" style="font-size:9px;letter-spacing:.34em;text-transform:uppercase;border:0">world</a>
+    <a href="#wardrobe" style="font-size:9px;letter-spacing:.34em;text-transform:uppercase;border:0">wardrobe</a>
+    <a href="#contact" style="font-size:9px;letter-spacing:.34em;text-transform:uppercase;border:0">contact</a>
+  </nav>
+
+  <!-- ═══════════ I · THE MARK ═══════════ -->
+  <section style="position:relative;min-height:100svh;display:grid;place-items:center;overflow:hidden;padding:120px 0 90px">
+    <div aria-hidden="true" style="position:absolute;left:50%;top:50%;width:min(112vw,1340px);height:min(78vh,700px);transform:translate(-50%,-50%);z-index:1;pointer-events:none;background:radial-gradient(ellipse 40% 34% at 50% 54%,rgba(7,0,12,.86) 0%,rgba(7,0,12,.74) 32%,rgba(7,0,12,.42) 56%,rgba(7,0,12,.12) 78%,rgba(7,0,12,0) 92%)"></div>
+    <div style="position:relative;z-index:2;width:100%;display:grid;justify-items:center">
+      <div style="position:relative;width:min(47vw,780px)">
+        <img aria-hidden="true" src="assets/mark/wordmark.webp" alt="" style="{{ ghostAStyle }}">
+        <img aria-hidden="true" src="assets/mark/wordmark.webp" alt="" style="{{ ghostBStyle }}">
+        <img src="assets/mark/wordmark.webp" alt="Swagfag Skelly Club" style="{{ markStyle }}">
+      </div>
+      <p style="margin:44px 0 0;font-size:10px;line-height:1;letter-spacing:.46em;text-transform:uppercase;color:#fff;text-align:center;text-shadow:0 0 22px rgba(7,0,12,1),0 0 8px rgba(7,0,12,1),0 2px 3px rgba(7,0,12,1)">Swag is a spiritual condition</p>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:26px">
+        <i style="display:block;width:5px;height:5px;border-radius:50%;background:#ff00ae;animation:sfPulse 1.6s ease-in-out infinite"></i>
+        <span style="font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:rgba(255,255,255,.88);text-shadow:0 0 20px rgba(7,0,12,1),0 0 7px rgba(7,0,12,1)">members only</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ II · THE STRETCH ═══════════ -->
+  <section id="world" style="position:relative;overflow:hidden;padding:0 0 70px">
+    <img aria-hidden="true" src="assets/decal/cashgrabber.webp" alt="" style="position:relative;z-index:3;display:block;width:min(1240px,128vw);height:auto;margin:0 0 -4vw -6vw;filter:saturate(1.45) contrast(1.06) drop-shadow(0 10px 30px rgba(0,0,0,.7));transform:rotate(-2.4deg);pointer-events:none">
+
+    <div onPointerMove="{{ rowMove }}" onPointerLeave="{{ rowOut }}" style="position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:center;gap:0;height:min(58vh,520px);touch-action:pan-y">
+      <sc-for list="{{ figures }}" as="f" hint-placeholder-count="8">
+        <div style="flex:1 1 0;min-width:0;display:flex;align-items:flex-end;justify-content:center;height:100%">
+          <img src="{{ f.src }}" alt="" loading="lazy" style="{{ f.style }}">
+        </div>
+      </sc-for>
+    </div>
+
+    <p style="margin:34px auto 0;max-width:1240px;padding:0 26px;font-size:10px;line-height:1;letter-spacing:.4em;text-transform:uppercase;color:rgba(255,255,255,.55);text-shadow:0 2px 18px rgba(7,0,12,.9)">Touch it to see it straight</p>
+  </section>
+
+  <!-- ═══════════ III · KNOCKOUT — the mark cut out of the sky's own weather ═══════════ -->
+  <section id="wardrobe" style="position:relative;min-height:94svh;display:grid;place-items:center;overflow:hidden;padding:0">
+    <img aria-hidden="true" src="assets/mark/wordmark.webp" alt="" style="{{ stretchStyle }}">
+  </section>
+
+  <!-- ═══════════ IV · THE RUN ═══════════ -->
+  <section style="position:relative;padding:70px 0 0;overflow:hidden">
+    <div style="overflow:hidden;white-space:nowrap">
+      <div style="display:inline-flex;align-items:center;gap:clamp(30px,5vw,90px);animation:sfRunL 38s linear infinite;will-change:transform">
+        <sc-for list="{{ runA }}" as="d" hint-placeholder-count="12">
+          <img src="{{ d }}" alt="" loading="lazy" style="display:block;height:clamp(84px,13vw,210px);width:auto;filter:saturate(1.5) contrast(1.05) drop-shadow(0 6px 24px rgba(7,0,12,.8));flex:none">
+        </sc-for>
+      </div>
+    </div>
+    <div style="overflow:hidden;white-space:nowrap;margin-top:clamp(18px,3vw,46px)">
+      <div style="display:inline-flex;align-items:center;gap:clamp(30px,5vw,90px);animation:sfRunR 44s linear infinite;will-change:transform">
+        <sc-for list="{{ runB }}" as="d" hint-placeholder-count="12">
+          <img src="{{ d }}" alt="" loading="lazy" style="display:block;height:clamp(84px,13vw,210px);width:auto;filter:saturate(1.5) contrast(1.05) drop-shadow(0 6px 24px rgba(7,0,12,.8));flex:none">
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ V · THE HOLE ═══════════ -->
+  <section style="position:relative;min-height:88svh;display:grid;place-items:center;overflow:hidden;padding:110px 26px">
+    <img src="assets/trinkets/forbidden-slideshow.gif" alt="Animated collage of Skelly Club artwork" style="{{ holeStyle }}">
+  </section>
+
+  <!-- ═══════════ VI · COLOPHON ═══════════ -->
+  <footer id="contact" style="position:relative;padding:110px 26px 130px;display:grid;justify-items:center;gap:34px">
+    <img src="assets/mark/wordmark.webp" alt="Swagfag Skelly Club" style="display:block;width:min(70vw,600px);height:auto;transform:scaleY(1.18);transform-origin:center;filter:drop-shadow(0 10px 40px rgba(7,0,12,.9))">
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:26px">
+      <a href="#world" style="font-size:9px;letter-spacing:.34em;text-transform:uppercase">world</a>
+      <a href="#wardrobe" style="font-size:9px;letter-spacing:.34em;text-transform:uppercase">wardrobe</a>
+      <a href="#contact" style="font-size:9px;letter-spacing:.34em;text-transform:uppercase">contact</a>
+    </div>
+    <div style="display:grid;justify-items:center;gap:12px">
+      <span style="font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:rgba(255,255,255,.42);text-shadow:0 0 18px rgba(7,0,12,1)">members only</span>
+      <span style="font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:rgba(255,255,255,.3);text-shadow:0 0 18px rgba(7,0,12,1)">Est. MMXXIV</span>
+    </div>
+  </footer>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:980}}">
+const FIGURES = [1795, 1862, 1370, 2193, 1874, 1056, 2266, 1826];
+
+/* Base distortion per figure — nobody is at true proportion until you reach them. */
+const WARP = [
+  [0.46, 1.78], [1.55, 0.78], [0.34, 1.86], [1.22, 0.90],
+  [0.58, 1.52], [1.90, 0.66], [0.40, 1.70], [1.38, 0.82],
+];
+
+const DECALS = [
+  'assets/decal/bando-world-order.webp',
+  'assets/decal/grifter.webp',
+  'assets/decal/cokefiend.webp',
+  'assets/mark/wordmark.webp',
+  'assets/decal/ak47.webp',
+  'assets/decal/cashgrabber.webp',
+];
+
+/* Dusk, in the collection's own colours: violet → magenta → ember → sun. */
+const SKY = [[14, 2, 48], [44, 6, 104], [112, 14, 152], [222, 38, 148], [255, 116, 98], [255, 208, 138]];
+
+/* value noise ---------------------------------------------------------- */
+const PERM = new Uint8Array(512);
+(() => {
+  const p = [];
+  for (let i = 0; i < 256; i++) p[i] = i;
+  let seed = 1337;
+  for (let i = 255; i > 0; i--) {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const j = seed % (i + 1);
+    const tmp = p[i]; p[i] = p[j]; p[j] = tmp;
+  }
+  for (let i = 0; i < 512; i++) PERM[i] = p[i & 255];
+})();
+
+const fade = t => t * t * (3 - 2 * t);
+const hash = (a, b) => PERM[(PERM[a & 255] + (b & 255)) & 511] * 0.00392156862745098;
+
+function vnoise(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y);
+  const u = fade(x - xi), v = fade(y - yi);
+  const a = hash(xi, yi), b = hash(xi + 1, yi);
+  const c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+  return (a + (b - a) * u) * (1 - v) + (c + (d - c) * u) * v;
+}
+
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
+const c8 = v => (v < 0 ? 0 : v > 255 ? 255 : v | 0);
+
+class Component extends DCLogic {
+  state = { mx: 0.5, rowX: null, scroll: 0 };
+
+  /* ── sky ────────────────────────────────────────────────────────────
+     One procedural dusk, drawn small and resampled up smoothly: advecting
+     cloud strata, a heat shimmer that bends every row, and a downward
+     cascade in the lower half — the waterfall illusion. Perfectly still
+     and clean on the landing screen; comes apart on the way down.      */
+
+  componentDidMount() {
+    this._reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.resize();
+    this._onResize = () => this.resize();
+    window.addEventListener('resize', this._onResize);
+
+    this._t0 = performance.now();
+    this._last = 0;
+    this._loop = now => {
+      this._raf = requestAnimationFrame(this._loop);
+      if (now - this._last < 33) return;            // ~30fps is plenty
+      this._last = now;
+      this.paint((now - this._t0) / 1000);
+    };
+    if (this._reduced) this.paint(0);
+    else this._raf = requestAnimationFrame(this._loop);
+
+    this._pm = e => this.setState({ mx: clamp01(e.clientX / (window.innerWidth || 1)) });
+    window.addEventListener('pointermove', this._pm, { passive: true });
+
+    this._sc = () => {
+      const se = document.scrollingElement || document.documentElement;
+      this._y = window.scrollY || se.scrollTop || document.body.scrollTop || 0;
+      if (this._sraf) return;
+      this._sraf = requestAnimationFrame(() => { this._sraf = null; this.setState({ scroll: this._y }); });
+    };
+    window.addEventListener('scroll', this._sc, { passive: true });
+    document.addEventListener('scroll', this._sc, { passive: true, capture: true });
+  }
+
+  componentWillUnmount() {
+    cancelAnimationFrame(this._raf);
+    window.removeEventListener('resize', this._onResize);
+    window.removeEventListener('pointermove', this._pm);
+    window.removeEventListener('scroll', this._sc);
+    document.removeEventListener('scroll', this._sc, { capture: true });
+  }
+
+  resize() {
+    const c = this._sky;
+    if (!c) return;
+    const w = window.innerWidth, h = window.innerHeight;
+    c.width = w; c.height = h;
+    const S = 3;
+    this._bw = Math.max(40, Math.ceil(w / S));
+    this._bh = Math.max(40, Math.ceil(h / S));
+    this._buf = document.createElement('canvas');
+    this._buf.width = this._bw; this._buf.height = this._bh;
+    this._bctx = this._buf.getContext('2d');
+    this._img = this._bctx.createImageData(this._bw, this._bh);
+    this._ctx = c.getContext('2d');
+    if (this._reduced) this.paint(0);
+  }
+
+  paint(t) {
+    const bw = this._bw, bh = this._bh, img = this._img;
+    if (!img) return;
+    const px = img.data;
+    /* Read the scroll straight out of whichever element is actually the
+       scroller — depending on the host, it is the window OR the body, and a
+       scroll event on the body never reaches a window listener. */
+    const se = document.scrollingElement || document.documentElement;
+    const y = window.scrollY || se.scrollTop || document.body.scrollTop || 0;
+    const maxY = Math.max(1, Math.max(se.scrollHeight, document.body.scrollHeight) - window.innerHeight);
+    this._y = y;
+
+    const drift = y * 0.0012;                       // the plane keeps moving as you go down
+
+    /* The air starts almost still at the top of the page and comes apart on
+       the way down: shimmer, cascade and dither crunch all ride the scroll. */
+    const prog = clamp01(y / maxY);
+    const warp = prog * prog * 2.6;                 // exactly nothing at the top
+
+    for (let y = 0; y < bh; y++) {
+      const v = y / bh;
+      const seg = Math.pow(v, 1.08) * (SKY.length - 1);   // horizon low in frame
+      const i0 = Math.min(SKY.length - 2, seg | 0);
+      const ft = seg - i0;
+      const c0 = SKY[i0], c1 = SKY[i0 + 1];
+      const br = lerp(c0[0], c1[0], ft), bg = lerp(c0[1], c1[1], ft), bb = lerp(c0[2], c1[2], ft);
+      /* shimmer: every row is displaced — the illusion that the air moves.
+         Zero at the landing screen, heavy by the bottom of the page. */
+      const sh = (0.021 * Math.sin(v * 19 + t * 1.15)
+                + 0.011 * Math.sin(v * 47 - t * 0.72)
+                + 0.026 * prog * Math.sin(v * 88 + t * 2.15)
+                + 0.018 * prog * Math.sin(v * 151 - t * 1.6)) * warp;
+      const cascadeMask = clamp01((v - 0.42) / 0.58) * prog;
+
+      for (let x = 0; x < bw; x++) {
+        const u = x / bw + sh;
+
+        /* cloud strata, advecting sideways and thinning with altitude */
+        let cl = vnoise(u * 4.4 + t * 0.05, v * 9.0 + drift) * 0.50
+               + vnoise(u * 10.2 - t * 0.03, v * 20.5 + drift) * 0.32
+               + vnoise(u * 23.0 + t * 0.02, v * 44.0 + drift) * 0.18;
+        cl = clamp01((cl - 0.30) * 2.6) * (0.42 + v * 0.86);
+
+        /* the waterfall: noise falling straight down, forever */
+        const wv = vnoise(u * 8.4, v * 26.0 - t * 1.35);
+        const cascade = cascadeMask * clamp01((wv - 0.44) * 2.7);
+
+        let r = br + (252 - br) * cl * 0.9;
+        let g = bg + (240 - bg) * cl * 0.9;
+        let b = bb + (255 - bb) * cl * 0.9;
+        r += cascade * (168 - r) * 0.74;
+        g += cascade * (248 - g) * 0.74;
+        b += cascade * (255 - b) * 0.74;
+
+        const i = (y * bw + x) << 2;
+        px[i] = c8(r); px[i + 1] = c8(g); px[i + 2] = c8(b); px[i + 3] = 255;
+      }
+    }
+
+    this._bctx.putImageData(img, 0, 0);
+    const ctx = this._ctx;
+    ctx.imageSmoothingEnabled = true;               // soft, not blocky
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(this._buf, 0, 0, this._sky.width, this._sky.height);
+  }
+
+  renderVals() {
+    const { mx, rowX, scroll } = this.state;
+    const k = (mx - 0.5) * 2;
+    const sy = 1.34 + Math.abs(k) * 0.34;
+    const skew = -k * 5.2;
+    const base = 'display:block;width:100%;height:auto;image-rendering:pixelated;transform-origin:center';
+
+    const figures = FIGURES.map((id, i) => {
+      const centre = (i + 0.5) / FIGURES.length;
+      const t = rowX === null
+        ? 0.06 + 0.06 * Math.sin(scroll / 190 + i)
+        : clamp01(1 - Math.abs(rowX - centre) * 4.2);
+      const [bx, by] = WARP[i];
+      const fx = lerp(bx, 1, t), fy = lerp(by, 1, t);
+      return {
+        src: `assets/member/${id}.webp`,
+        style: 'display:block;width:100%;height:auto;max-height:52%;object-fit:contain;'
+          + `transform:scale(${fx.toFixed(3)},${fy.toFixed(3)});transform-origin:bottom center;`
+          + `filter:saturate(${(1.25 + t * 0.75).toFixed(2)}) contrast(${(1.04 + t * 0.14).toFixed(2)}) `
+          + `drop-shadow(0 ${(10 + t * 22) | 0}px ${(20 + t * 26) | 0}px rgba(7,0,12,.72));`
+          + 'transition:transform .16s linear,filter .3s ease',
+      };
+    });
+
+    return {
+      skyCanvas: el => { this._sky = el; if (el) { this.resize(); this.paint(0); } },
+
+      markStyle: `${base};position:relative;z-index:3;filter:drop-shadow(0 0 70px rgba(7,0,12,.95)) drop-shadow(0 14px 34px rgba(7,0,12,.75));transform:scaleY(${sy.toFixed(3)}) skewX(${skew.toFixed(2)}deg)`,
+      ghostAStyle: `${base};position:absolute;inset:0;z-index:1;mix-blend-mode:screen;opacity:.75;`
+        + `filter:hue-rotate(${(150 + k * 40) | 0}deg) saturate(3.4);`
+        + `transform:translate(${(-11 - k * 9).toFixed(1)}px,${(7 + k * 3).toFixed(1)}px) scaleY(${(sy * 1.045).toFixed(3)}) skewX(${(skew * 1.5).toFixed(2)}deg)`,
+      ghostBStyle: `${base};position:absolute;inset:0;z-index:2;mix-blend-mode:screen;opacity:.6;`
+        + `filter:hue-rotate(${(300 - k * 50) | 0}deg) saturate(3.4);`
+        + `transform:translate(${(12 - k * 9).toFixed(1)}px,${(-6 + k * 3).toFixed(1)}px) scaleY(${(sy * 0.965).toFixed(3)}) skewX(${(skew * 0.5).toFixed(2)}deg)`,
+
+      figures,
+      rowMove: e => {
+        const r = e.currentTarget.getBoundingClientRect();
+        this.setState({ rowX: clamp01((e.clientX - r.left) / r.width) });
+      },
+      rowOut: () => this.setState({ rowX: null }),
+
+      /* the mark stretched until the letterforms stop being type and become
+         architecture — cropped hard by the viewport on both sides */
+      stretchStyle: 'position:relative;z-index:2;display:block;width:172vw;max-width:none;height:auto;'
+        + 'image-rendering:pixelated;mix-blend-mode:screen;'
+        + `transform:scaleY(${(3.1 + Math.abs(k) * 0.5).toFixed(2)}) skewX(${(skew * 0.35).toFixed(2)}deg);`
+        + 'transform-origin:center;filter:saturate(1.5) contrast(1.06)',
+
+      runA: DECALS.concat(DECALS),
+      runB: DECALS.slice().reverse().concat(DECALS.slice().reverse()),
+
+      holeStyle: 'position:relative;z-index:2;display:block;width:min(86vw,1080px);height:auto;'
+        + `transform:scaleY(${(0.72 + Math.abs(k) * 0.26).toFixed(3)});transform-origin:center;`
+        + 'image-rendering:pixelated;filter:saturate(1.9) contrast(1.08);'
+        + 'box-shadow:0 40px 120px -30px rgba(255,0,174,.55)',
+    };
+  }
+}
+
+</script>
+</body>
+</html>
